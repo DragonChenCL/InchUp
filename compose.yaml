@@ -1,0 +1,32 @@
+name: inchup
+
+services:
+  app:
+    image: inchup:local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: "5173"
+      DATABASE_PATH: /app/data/inchup.sqlite
+      TZ: Asia/Shanghai
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${DEPLOY_PORT:-5173}:5173"
+    volumes:
+      - inchup_data:/app/data
+    stop_grace_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  inchup_data:
+    name: inchup_data

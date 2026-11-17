@@ -1,0 +1,28 @@
+{
+  "name": "inchup",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "寸进：与鼠妹一起，把目标变成每天的一小步。",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "node --experimental-sqlite --import tsx server/index.ts",
+    "check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.server.json",
+    "build": "npm run check && vite build && tsc -p tsconfig.server.json",
+    "start": "node --experimental-sqlite dist/server/index.js"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tsx": "^4.19.2",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5"
+  }
+}
