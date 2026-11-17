@@ -1,9 +1,10 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { ArrowUpRight, Check, LoaderCircle, Plus, X } from 'lucide-react';
 import type { User } from '../../shared/types';
+import { BrandMark } from './brand';
 
 export function Logo({ compact = false }: { compact?: boolean }) {
-  return <a className="brand" href="#today" aria-label="寸进首页"><span className="brand-mark"><svg viewBox="0 0 40 40" fill="none" aria-hidden="true"><circle cx="11" cy="12" r="7" fill="currentColor"/><circle cx="29" cy="12" r="7" fill="currentColor"/><path d="M5 23C5 13 12 10 20 10s15 3 15 13-7 14-15 14S5 33 5 23Z" fill="currentColor"/><ellipse cx="14.5" cy="22" rx="1.6" ry="2.2" fill="#8574bf"/><ellipse cx="25.5" cy="22" rx="1.6" ry="2.2" fill="#8574bf"/><path d="m17 28 3 2 3-2" stroke="#8574bf" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>{!compact && <span className="brand-type"><strong>寸进<span>InchUp</span></strong><small>每天，往前一点</small></span>}</a>;
+  return <a className="brand" href="#today" aria-label="寸进首页"><BrandMark />{!compact && <span className="brand-type"><strong>寸进<span>InchUp</span></strong><small>每天，往前一点</small></span>}</a>;
 }
 
 export function Avatar({ user, size = 'normal' }: { user: Pick<User, 'name' | 'avatar'>; size?: 'small' | 'normal' | 'large' }) {

@@ -1,0 +1,423 @@
+/* 成长记录独立样式：热力图按周一到周日排列，日期细节与时间线共用北京时间。 */
+.growth-page .growth-page-heading {
+  margin-bottom: 26px;
+}
+
+.growth-page .growth-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 25px;
+  padding: 25px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fffefa;
+}
+
+.growth-page .growth-summary > div {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding: 5px 15px;
+  border-right: 1px solid #eee9df;
+}
+
+.growth-page .growth-summary > div:last-child {
+  border-right: 0;
+}
+
+.growth-page .growth-icon {
+  display: grid;
+  place-items: center;
+  width: 49px;
+  height: 49px;
+  flex: 0 0 49px;
+  border-radius: 14px;
+  background: #edf1e3;
+  color: #a3b18c;
+}
+
+.growth-page .growth-icon.peach {
+  background: #f8eee4;
+  color: #c6a07c;
+}
+
+.growth-page .growth-icon.butter {
+  background: #f6efdc;
+  color: #bda36e;
+}
+
+.growth-page .growth-summary p {
+  font-size: 12px;
+  color: #746a5e;
+}
+
+.growth-page .growth-summary strong {
+  display: block;
+  margin-top: 7px;
+  color: #62584b;
+  font: 700 32px 'Nunito Sans', sans-serif;
+}
+
+.growth-page .growth-summary small {
+  margin-left: 8px;
+  color: #746a5e;
+  font: 400 12px 'Noto Sans SC', sans-serif;
+}
+
+.growth-page .growth-heatmap-panel,
+.growth-page .growth-timeline-panel {
+  margin-top: 23px;
+  padding: 24px;
+}
+
+.growth-page .growth-heatmap-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 0 21px;
+}
+
+.growth-page .growth-week-labels {
+  display: flex;
+  justify-content: space-between;
+  align-self: auto;
+  height: 154px;
+  padding: 24px 0 2px;
+  color: #746a5e;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.growth-page .growth-heatmap-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0 1px 3px;
+  scrollbar-width: thin;
+  scrollbar-color: #d9d3c7 transparent;
+}
+
+.growth-page .growth-heatmap-months {
+  display: grid;
+  gap: 6px;
+  min-width: 286px;
+  height: 18px;
+  color: #746a5e;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.growth-page .growth-heatmap-months > span {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.growth-page .growth-heatmap-grid {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(7, 15px);
+  gap: 6px;
+  min-width: 286px;
+}
+
+.growth-page .growth-heatmap-cell {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: 15px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: #f0ede4;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.growth-page button.growth-heatmap-cell:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px #8d7f6522;
+}
+
+.growth-page button.growth-heatmap-cell:focus-visible {
+  outline: 2px solid #9784c5;
+  outline-offset: 2px;
+}
+
+.growth-page .growth-heatmap-cell.is-selected {
+  box-shadow: 0 0 0 2px #8574bd, 0 2px 6px #8574bd29;
+}
+
+.growth-page .growth-heatmap-cell.heatmap-cell-outside {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.growth-page .growth-heatmap-cell.heat-1 { background: #e0e8ce; }
+.growth-page .growth-heatmap-cell.heat-2 { background: #c7d7ac; }
+.growth-page .growth-heatmap-cell.heat-3 { background: #acbf8a; }
+.growth-page .growth-heatmap-cell.heat-4 { background: #8aa465; }
+
+.growth-page .growth-heatmap-quote {
+  width: 150px;
+  margin: 26px 0 0 15px;
+  color: #b7b28e;
+  text-align: center;
+}
+
+.growth-page .growth-heatmap-quote p {
+  margin-top: 9px;
+  color: #746a5e;
+  font-size: 12px;
+  line-height: 2;
+}
+
+.growth-page .growth-heatmap-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #746a5e;
+  font-size: 12px;
+}
+
+.growth-page .growth-heatmap-bottom > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.growth-page .growth-heatmap-bottom .heatmap-cell {
+  width: 11px;
+  height: 11px;
+  cursor: default;
+}
+
+.growth-page .growth-day-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 14px;
+  padding: 15px 16px 0;
+  border-top: 1px solid #f0eae0;
+}
+
+.growth-page .growth-day-detail > div:first-child {
+  min-width: 0;
+}
+
+.growth-page .growth-detail-kicker {
+  display: block;
+  color: #746a5e;
+  font-size: 12px;
+}
+
+.growth-page .growth-day-detail h3 {
+  margin-top: 4px;
+  color: #62584b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.growth-page .growth-detail-count {
+  align-self: end;
+  color: #8778a9;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.growth-page .growth-day-task-list {
+  grid-column: 1 / -1;
+  margin-top: 9px;
+}
+
+.growth-page .growth-day-task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f0eae0;
+}
+
+.growth-page .growth-day-task > div {
+  min-width: 0;
+}
+
+.growth-page .growth-day-task strong {
+  display: block;
+  overflow: hidden;
+  color: #62584b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.7;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.growth-page .growth-day-task p {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #746a5e;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.growth-page .growth-day-task > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  color: #746a5e;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.growth-page .growth-day-empty {
+  grid-column: 1 / -1;
+  margin-top: 9px;
+  padding: 12px 0 1px;
+  border-top: 1px solid #f0eae0;
+  color: #746a5e;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.growth-page .growth-timeline-panel .history-timeline {
+  margin-top: 27px;
+}
+
+.growth-page .growth-timeline-panel .history-day h3 {
+  font-size: 12px;
+}
+
+@media (max-width: 960px) {
+  .growth-page .growth-summary {
+    gap: 6px;
+    padding: 19px 8px;
+  }
+
+  .growth-page .growth-summary > div {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 3px 13px;
+  }
+
+  .growth-page .growth-summary strong {
+    font-size: 25px;
+  }
+
+  .growth-page .growth-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .growth-page .growth-heatmap-quote {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .growth-page .growth-summary {
+    gap: 0;
+    padding: 18px 8px;
+  }
+
+  .growth-page .growth-summary > div {
+    padding: 3px 9px;
+  }
+
+  .growth-page .growth-summary strong {
+    font-size: 23px;
+  }
+
+  .growth-page .growth-summary small {
+    margin-left: 4px;
+    font-size: 12px;
+  }
+
+  .growth-page .growth-summary p {
+    font-size: 12px;
+  }
+
+  .growth-page .growth-icon {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+    border-radius: 10px;
+  }
+
+  .growth-page .growth-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .growth-page .growth-heatmap-panel,
+  .growth-page .growth-timeline-panel {
+    padding: 18px;
+  }
+
+  .growth-page .growth-heatmap-layout {
+    gap: 8px;
+    padding-top: 16px;
+  }
+
+  .growth-page .growth-week-labels {
+    height: 130px;
+    padding-top: 22px;
+    font-size: 12px;
+  }
+
+  .growth-page .growth-heatmap-months {
+    gap: 4px;
+    min-width: 260px;
+    font-size: 12px;
+  }
+
+  .growth-page .growth-heatmap-grid {
+    gap: 4px;
+    min-width: 260px;
+    grid-template-rows: repeat(7, 12px);
+  }
+
+  .growth-page .growth-heatmap-cell {
+    height: 12px;
+  }
+
+  .growth-page .growth-heatmap-bottom {
+    font-size: 12px;
+  }
+
+  .growth-page .growth-heatmap-bottom > span {
+    gap: 3px;
+  }
+
+  .growth-page .growth-heatmap-bottom .heatmap-cell {
+    width: 9px;
+    height: 9px;
+  }
+
+  .growth-page .growth-day-detail {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .growth-page .growth-day-task {
+    gap: 8px;
+  }
+
+  .growth-page .growth-day-task strong {
+    font-size: 12px;
+  }
+
+  .growth-page .growth-day-task p,
+  .growth-page .growth-day-task > span:last-child,
+  .growth-page .growth-day-empty {
+    font-size: 12px;
+  }
+
+  .growth-page .growth-timeline-panel .history-day {
+    padding-left: 20px;
+  }
+}

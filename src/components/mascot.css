@@ -1,0 +1,37 @@
+/* 手机端把寸寸入口纳入底部导航，不占用任务区。 */
+.mascot-step-mark { width: 28px; height: 28px; display: grid; place-items: center; color: var(--purple); }
+.mascot-step-mark svg { width: 100%; height: 100%; }
+.mascot-mobile-dock {
+  position: fixed;
+  right: 12px;
+  bottom: calc(7px + env(safe-area-inset-bottom));
+  width: calc((100vw - 24px) / 5);
+  height: 48px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 12px;
+  color: #756b60;
+  background: transparent;
+  z-index: 36;
+}
+.mascot-mobile-dock .mascot-step-mark { width: 23px; height: 23px; color: inherit; }
+.mascot-dock-label { font-size: 11px; line-height: 1.6; }
+.mascot-mobile-dock.is-expanded { color: #654b94; background: #eee7f5; }
+.mascot-mobile-dock > i { position: absolute; top: 4px; right: calc(50% - 17px); width: 6px; height: 6px; border-radius: 50%; background: #b16e4f; }
+.mascot-mobile-dock.is-celebrating .mascot-step-mark { animation: mascot-dock-pulse 1.1s ease-in-out infinite; }
+.floating-mascot.mascot-mobile-expanded { width: 102px; height: 124px; transform: none; z-index: 61; pointer-events: auto; }
+.floating-mascot.mascot-mobile-expanded .mascot-touch { width: 98px; height: 120px; margin-left: 2px; cursor: pointer; }
+.floating-mascot.mascot-mobile-expanded .mascot-tag { display: none; }
+.floating-mascot.mascot-mobile-expanded .pet-ground { width: 58px; height: 7px; left: 20px; }
+.floating-mascot.mascot-mobile-expanded .mascot-bubble { width: min(290px, calc(100vw - 28px)); padding: 16px; }
+.floating-mascot.mascot-mobile-expanded .mascot-bubble > p { font-size: 14px; line-height: 1.8; }
+.floating-mascot.mascot-mobile-expanded .bubble-actions > button { min-height: 44px; padding: 8px 9px; font-size: 12px; }
+.floating-mascot.mascot-mobile-expanded .bubble-rest { min-height: 44px; font-size: 12px; }
+.floating-mascot .bubble-close { min-width: 32px; min-height: 32px; }
+.mascot-restore { display: grid; place-items: center; }
+@keyframes mascot-dock-pulse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .mascot-mobile-dock.is-celebrating .mascot-step-mark { animation: none; } }

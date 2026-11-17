@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import { Coffee, ListTodo, Minimize2, Moon, Play, X } from 'lucide-react';
+import './mascot.css';
 
 type Mood = 'idle' | 'walk' | 'celebrate';
 type TurnDirection = 'left' | 'right' | null;
@@ -57,8 +58,60 @@ export function Sprite({ mood = 'idle', size = 140, className = '' }: { mood?: M
 
 export interface MascotPreferences { enabled: boolean; roaming: boolean; quiet: boolean }
 
+const MASCOT_WIDTH = 144;
+const MASCOT_HEIGHT = 180;
+
+function isVisibleElement(element: Element) {
+  const html = element as HTMLElement;
+  const rect = html.getBoundingClientRect();
+  const style = window.getComputedStyle(html);
+  return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && style.opacity !== '0';
+}
+
+function overlapArea(a: { left: number; top: number; right: number; bottom: number }, b: DOMRect) {
+  const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+  const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  return width * height;
+}
+
+function desktopCandidates() {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const sidebar = Number.parseFloat(window.getComputedStyle(document.documentElement).getPropertyValue('--sidebar')) || 222;
+  const clampX = (value: number) => Math.max(12, Math.min(viewportWidth - MASCOT_WIDTH - 12, value));
+  const clampY = (value: number) => Math.max(76, Math.min(viewportHeight - MASCOT_HEIGHT - 16, value));
+  // 只在屏幕边缘选点，避免鼠妹穿过表单、任务列表和顶部工具栏。
+  return [
+    { x: clampX(viewportWidth - MASCOT_WIDTH - 18), y: clampY(viewportHeight - MASCOT_HEIGHT - 22) },
+    { x: clampX(viewportWidth - MASCOT_WIDTH - 18), y: clampY(92) },
+    { x: clampX(sidebar + 14), y: clampY(viewportHeight - MASCOT_HEIGHT - 22) },
+    { x: clampX(sidebar + 14), y: clampY(92) },
+  ];
+}
+
+function chooseDesktopPosition(current?: { x: number; y: number }): { x: number; y: number } {
+  const obstacles = Array.from(document.querySelectorAll('button, input, textarea, select, [role="dialog"]'))
+    .filter(element => !element.closest('.floating-mascot') && isVisibleElement(element));
+  const candidates = desktopCandidates().map(candidate => {
+    const rect = { left: candidate.x, top: candidate.y, right: candidate.x + MASCOT_WIDTH, bottom: candidate.y + MASCOT_HEIGHT };
+    const score = obstacles.reduce((total, element) => total + overlapArea(rect, element.getBoundingClientRect()), 0);
+    const distance = current ? Math.hypot(candidate.x - current.x, candidate.y - current.y) : 0;
+    return { ...candidate, score, distance };
+  });
+  const safe = candidates.filter(candidate => candidate.score === 0);
+  const pool = safe.length ? safe : candidates;
+  const farEnough = pool.filter(candidate => candidate.distance > 80 && (!current || Math.abs(candidate.x - current.x) < 1));
+  const chosen = (farEnough.length ? farEnough : pool.filter(candidate => !current || candidate.distance < 1)).sort((a, b) => a.score - b.score || b.distance - a.distance)[0] || (current ? { ...current, score: 0, distance: 0 } : candidates[0]);
+  return { x: chosen.x, y: chosen.y };
+}
+
+function StepMark() {
+  return <span className="mascot-step-mark" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><path d="M4 20.5h7v-6h6v-6h7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><path d="M20.5 5.5h3.5V9" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="5" cy="7" r="2" fill="currentColor" opacity=".55"/></svg></span>;
+}
+
 export function Mascot({ preferences, celebration, nextTask, onFocus }: { preferences: MascotPreferences; celebration: number; nextTask?: string; onFocus: () => void }) {
-  const [position, setPosition] = useState({ x: Math.max(16, window.innerWidth - 190), y: Math.max(90, window.innerHeight - 190) });
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 720px)').matches);
+  const [position, setPosition] = useState(() => chooseDesktopPosition());
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
   const [turning, setTurning] = useState(false);
@@ -69,6 +122,8 @@ export function Mascot({ preferences, celebration, nextTask, onFocus }: { prefer
   const [hovered, setHovered] = useState(false);
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+  const [interactionBlocked, setInteractionBlocked] = useState(false);
   const [speech, setSpeech] = useState('我会陪着你，一点一点往前走。');
   const node = useRef<HTMLDivElement>(null);
   const positionRef = useRef(position);
@@ -87,28 +142,68 @@ export function Mascot({ preferences, celebration, nextTask, onFocus }: { prefer
   };
 
   useEffect(() => {
-    const handle = () => setPosition(p => ({ x: Math.max(8, Math.min(p.x, window.innerWidth - 150)), y: Math.max(90, Math.min(p.y, window.innerHeight - 180)) }));
+    const media = window.matchMedia('(max-width: 720px)');
+    const handle = () => {
+      const nextMobile = media.matches;
+      setIsMobile(nextMobile);
+      if (nextMobile) {
+        clearMotionTimers();
+        setWalking(false);
+        setTurning(false);
+        setTurnDirection(null);
+        setOpen(false);
+        setMobileExpanded(false);
+      } else {
+        setPosition(chooseDesktopPosition());
+      }
+    };
     window.addEventListener('resize', handle);
-    return () => window.removeEventListener('resize', handle);
+    media.addEventListener?.('change', handle);
+    return () => { window.removeEventListener('resize', handle); media.removeEventListener?.('change', handle); };
   }, []);
+
+  useEffect(() => {
+    const checkBlocked = () => {
+      const active = document.activeElement;
+      const focusedField = active instanceof HTMLElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName);
+      const blocked = Boolean(document.querySelector('dialog[open], .focus-overlay')) || focusedField;
+      setInteractionBlocked(previous => previous === blocked ? previous : blocked);
+    };
+    checkBlocked();
+    const observer = new MutationObserver(checkBlocked);
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['open', 'class'] });
+    document.addEventListener('focusin', checkBlocked);
+    document.addEventListener('focusout', checkBlocked);
+    return () => { observer.disconnect(); document.removeEventListener('focusin', checkBlocked); document.removeEventListener('focusout', checkBlocked); };
+  }, []);
+
+  useEffect(() => {
+    if (!interactionBlocked) return;
+    clearMotionTimers();
+    setWalking(false);
+    setTurning(false);
+    setTurnDirection(null);
+    setOpen(false);
+    setMobileExpanded(false);
+  }, [interactionBlocked]);
 
   useEffect(() => {
     if (!celebration) return;
     clearMotionTimers();
-    if (node.current) setPosition(layoutPositionFromVisualRect());
+    if (!isMobile) setPosition(chooseDesktopPosition(positionRef.current));
     setWalking(false);
     setTurning(false);
     setTurnDirection(null);
     setCelebrating(true);
     setSpeech('又往前走了一步！今天的你，有点厉害哦。');
-    if (!preferences.quiet) setOpen(true);
+    // 手机端只在用户点开入口后展示完整角色，庆祝通过入口状态保留。
+    if (!isMobile && !preferences.quiet) setOpen(true);
     const timeout = setTimeout(() => { setCelebrating(false); setOpen(false); }, 5000);
     return () => clearTimeout(timeout);
-  }, [celebration, preferences.quiet]);
+  }, [celebration, preferences.quiet, isMobile]);
 
   useEffect(() => {
-    if (!preferences.enabled || !preferences.roaming || dragging || hovered || open || collapsed || celebrating || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      if (node.current) setPosition(layoutPositionFromVisualRect());
+    if (isMobile || interactionBlocked || !preferences.enabled || !preferences.roaming || dragging || hovered || open || collapsed || celebrating || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setWalking(false);
       return;
     }
@@ -121,13 +216,12 @@ export function Mascot({ preferences, celebration, nextTask, onFocus }: { prefer
       moveTimer.current = setTimeout(() => setWalking(false), duration * 1000);
     };
     const timer = setInterval(() => {
-      // 散步避开桌面侧栏，保留导航和设置按钮的点击区域。
-      const leftBoundary = window.innerWidth > 720 ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sidebar')) + 20 : 20;
-      const nextX = leftBoundary + Math.random() * Math.max(0, window.innerWidth - leftBoundary - 170);
-      const distance = Math.abs(nextX - positionRef.current.x);
+      const next = chooseDesktopPosition(positionRef.current);
+      const nextX = next.x;
+      const nextY = next.y;
+      const distance = Math.hypot(nextX - positionRef.current.x, nextY - positionRef.current.y);
       const duration = Math.max(2.8, Math.min(7.5, distance / 82));
       const nextFacingLeft = nextX < positionRef.current.x;
-      const nextY = Math.max(100, window.innerHeight - 190 - Math.random() * 30);
       clearTimeout(moveTimer.current);
       setWalking(false);
       if (nextFacingLeft !== facingRef.current) {
@@ -146,10 +240,11 @@ export function Mascot({ preferences, celebration, nextTask, onFocus }: { prefer
       }
     }, 18000);
     return () => { clearInterval(timer); clearMotionTimers(); };
-  }, [preferences.enabled, preferences.roaming, dragging, hovered, open, collapsed, celebrating]);
+  }, [preferences.enabled, preferences.roaming, dragging, hovered, open, collapsed, celebrating, isMobile, interactionBlocked]);
 
-  if (!preferences.enabled) return null;
-  if (collapsed) return <button className="mascot-restore" onClick={() => setCollapsed(false)} title="叫寸寸回来" aria-label="展开鼠妹寸寸"><span>🐭</span></button>;
+  if (!preferences.enabled || interactionBlocked) return null;
+  if (isMobile && !mobileExpanded) return <button className={`mascot-mobile-dock ${celebrating ? 'is-celebrating' : ''}`} aria-expanded={false} onClick={() => { setMobileExpanded(true); setOpen(true); }} title="打开寸寸陪伴" aria-label="打开寸寸对话"><StepMark /><span className="mascot-dock-label">寸寸</span>{celebrating && <i aria-hidden="true" />}</button>;
+  if (collapsed && !isMobile) return <button className="mascot-restore" onClick={() => setCollapsed(false)} title="叫寸寸回来" aria-label="展开鼠妹寸寸"><StepMark /></button>;
 
   function layoutPositionFromVisualRect() {
     const element = node.current!;
@@ -185,9 +280,21 @@ export function Mascot({ preferences, celebration, nextTask, onFocus }: { prefer
     if (!moved) setOpen(value => !value);
   }
 
-  return <div ref={node} className={`floating-mascot ${walking ? 'is-walking' : ''} ${facingLeft ? 'facing-left' : ''} ${turning ? 'is-turning' : ''} ${turnDirection ? `turn-to-${turnDirection}` : ''} ${dragging ? 'is-dragging' : ''}`} style={{ left: position.x, top: position.y, '--move-duration': dragging || !walking ? '0s' : `${travelDuration}s` } as CSSProperties} onMouseEnter={() => { if (walking) setPosition(layoutPositionFromVisualRect()); clearMotionTimers(); setWalking(false); setTurning(false); setTurnDirection(null); setHovered(true); }} onMouseLeave={() => setHovered(false)}>
-    {open && <div className="mascot-bubble" style={{ left: position.x < 140 ? 0 : 'auto', right: position.x < 140 ? 'auto' : 0, top: position.y < 260 ? 180 : 'auto', bottom: position.y < 260 ? 'auto' : 185 }}><button className="bubble-close" onClick={() => setOpen(false)} aria-label="关闭寸寸对话"><X size={13} /></button><span className="bubble-name">寸寸 <span>· 你的自律搭子</span></span><p>{speech}</p><div className="bubble-actions"><button onClick={() => setSpeech(nextTask ? `今天先做「${nextTask}」。不用一口气全做完，先开始就赢了一半。` : '今天的待办已经收好啦！可以加一个小任务，也可以好好休息。')}><ListTodo size={13} />今天做什么</button><button onClick={() => { setOpen(false); onFocus(); }}><Play size={13} />陪我专注</button></div><button className="bubble-rest" onClick={() => { setOpen(false); setCollapsed(true); }}><Minimize2 size={12} />先在角落休息一下</button></div>}
-    <button className="mascot-touch" aria-label="与寸寸互动，按住可以拖动" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={() => { clearMotionTimers(); drag.current = null; setDragging(false); setWalking(false); setTurning(false); setTurnDirection(null); }} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setOpen(value => !value); } }}><Sprite size={138} mood={celebrating ? 'celebrate' : walking ? 'walk' : 'idle'} /><span className="pet-ground" /></button>
+  function closeConversation() {
+    setOpen(false);
+    if (isMobile) setMobileExpanded(false);
+  }
+
+  const bubbleStyle = isMobile
+    ? { left: 'auto', right: 0, top: 'auto', bottom: 116 }
+    : { left: position.x < 140 ? 0 : 'auto', right: position.x < 140 ? 'auto' : 0, top: position.y < 260 ? 180 : 'auto', bottom: position.y < 260 ? 'auto' : 185 };
+  const wrapperStyle = (isMobile
+    ? { right: 12, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)', left: 'auto', top: 'auto', '--move-duration': '0s' }
+    : { left: position.x, top: position.y, '--move-duration': dragging || !walking ? '0s' : `${travelDuration}s` }) as unknown as CSSProperties;
+
+  return <>{isMobile && <button className="mascot-mobile-dock is-expanded" aria-label="收起寸寸对话" aria-expanded={true} onClick={closeConversation}><StepMark/><span className="mascot-dock-label">寸寸</span></button>}<div ref={node} className={`floating-mascot ${isMobile ? 'mascot-mobile-expanded' : ''} ${walking ? 'is-walking' : ''} ${facingLeft ? 'facing-left' : ''} ${turning ? 'is-turning' : ''} ${turnDirection ? `turn-to-${turnDirection}` : ''} ${dragging ? 'is-dragging' : ''}`} style={wrapperStyle} onMouseEnter={() => { if (isMobile) return; if (walking) setPosition(layoutPositionFromVisualRect()); clearMotionTimers(); setWalking(false); setTurning(false); setTurnDirection(null); setHovered(true); }} onMouseLeave={() => setHovered(false)}>
+    {open && <div className="mascot-bubble" style={bubbleStyle}><button className="bubble-close" onClick={closeConversation} aria-label="关闭寸寸对话"><X size={13} /></button><span className="bubble-name">寸寸 <span>· 你的自律搭子</span></span><p>{speech}</p><div className="bubble-actions"><button onClick={() => setSpeech(nextTask ? `今天先做「${nextTask}」。不用一口气全做完，先开始就赢了一半。` : '今天的待办已经收好啦！可以加一个小任务，也可以好好休息。')}><ListTodo size={13} />今天做什么</button><button onClick={() => { closeConversation(); onFocus(); }}><Play size={13} />陪我专注</button></div><button className="bubble-rest" onClick={() => { closeConversation(); setCollapsed(true); }}><Minimize2 size={12} />先在角落休息一下</button></div>}
+    <button className="mascot-touch" aria-label={isMobile ? '切换寸寸对话' : '与寸寸互动，按住可以拖动'} onPointerDown={isMobile ? undefined : pointerDown} onPointerMove={isMobile ? undefined : pointerMove} onPointerUp={isMobile ? undefined : pointerUp} onPointerCancel={isMobile ? undefined : () => { clearMotionTimers(); drag.current = null; setDragging(false); setWalking(false); setTurning(false); setTurnDirection(null); }} onClick={isMobile ? () => setOpen(value => !value) : undefined} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setOpen(value => !value); } }}><Sprite size={isMobile ? 96 : 138} mood={celebrating ? 'celebrate' : walking ? 'walk' : 'idle'} /><span className="pet-ground" /></button>
     <span className="mascot-tag">{preferences.quiet ? <Moon size={10} /> : <Coffee size={10} />}寸寸陪伴中</span>
-  </div>;
+  </div></>;
 }

@@ -1,0 +1,29 @@
+/* 寸进品牌元素只依赖 currentColor，便于放进浅色卡片和深色强调区域。 */
+.brand-mark {
+  --brand-accent: #8574bd;
+  width: var(--brand-size, 39px);
+  height: var(--brand-size, 39px);
+  display: grid;
+  place-items: center;
+  flex: 0 0 var(--brand-size, 39px);
+  color: #fff8ed;
+  background: #8574bd;
+  border-radius: 12px;
+  transform: rotate(-5deg);
+  box-shadow: 0 4px 0 #6f5da21c, inset 0 0 0 1px #ffffff1c;
+}
+
+.brand-mark svg {
+  width: calc(var(--brand-size, 39px) * .8);
+  height: calc(var(--brand-size, 39px) * .8);
+  transform: rotate(5deg);
+}
+
+.journey-icon { display: inline-block; overflow: visible; vertical-align: middle; }
+.step-trail { display: block; width: 100%; max-width: 260px; height: auto; color: var(--purple, #8574bd); pointer-events: none; }
+.promise-seal { display: block; width: 80px; height: 80px; color: var(--purple, #8574bd); opacity: .78; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark { transform: none; }
+  .brand-mark svg { transform: none; }
+}

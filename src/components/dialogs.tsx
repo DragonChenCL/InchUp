@@ -4,6 +4,7 @@ import type { CreateGoalInput, Goal, ModelSettings, PlannedTask } from '../../sh
 import { addDays, api, prettyDate, stakeNames, type TaskWithGoal } from '../lib';
 import { Modal, SubmitButton } from './ui';
 import { Sprite } from './Mascot';
+import './contract-form.css';
 
 export function CreateGoalDialog({ today, busy, onClose, onSubmit }: { today: string; busy: boolean; onClose: () => void; onSubmit: (input: CreateGoalInput & { acceptRules: boolean }) => Promise<void> }) {
   const [title, setTitle] = useState('');
@@ -16,13 +17,34 @@ export function CreateGoalDialog({ today, busy, onClose, onSubmit }: { today: st
   const [stakeDetail, setStakeDetail] = useState('');
   const [accepted, setAccepted] = useState(false);
   async function submit(event: FormEvent) { event.preventDefault(); await onSubmit({ title, description, deadline, isPublic, stakeTitle: hasStake ? stakeTitle : '', stakeType, stakeDetail: hasStake ? stakeDetail : '', acceptRules: accepted }); }
-  return <Modal title="立下一个小小的约定" subtitle="不用一下子变得很厉害，先给想做的事一个开始。" onClose={onClose} wide><form onSubmit={submit} className="form-stack">
-    <label className="field">我想完成什么<input value={title} onChange={event => setTitle(event.target.value)} placeholder="比如：两周内，让个人博客真正上线" minLength={2} maxLength={100} required autoFocus /></label>
-    <label className="field">做到什么，才算完成？<textarea value={description} onChange={event => setDescription(event.target.value)} placeholder="写下具体的验收标准，比如：完成首页、文章列表，并发布至少一篇文章。" minLength={2} maxLength={2000} rows={3} required /><small>写具体一点，未来的自己就少一点纠结。</small></label>
-    <div className="form-columns"><label className="field">约定截止日期<input type="date" value={deadline} min={today} max={addDays(today, 366)} onChange={event => setDeadline(event.target.value)} required /><small>以北京时间当天 23:59 为截止时间。</small></label><div className="field">谁可以看见<label className="choice-box"><input type="checkbox" checked={isPublic} onChange={event => setPublic(event.target.checked)} /><Globe2 size={17} /><span>公开给佬友见证<small>关闭后，目标只对自己可见。</small></span></label></div></div>
-    <div className={`stake-form ${hasStake ? 'is-active' : ''}`}><label className="stake-switch"><span className="soft-icon peach"><Gift size={20} /></span><span><strong>给这个约定，加一点分量</strong><small>选填。未完成时，自愿赠送一份心意。</small></span><input className="switch-input" type="checkbox" checked={hasStake} onChange={event => setHasStake(event.target.checked)} aria-label="设置自愿赠品" /></label>{hasStake && <div className="stake-fields"><div className="form-columns"><label className="field">我愿意送出<input value={stakeTitle} onChange={event => setStakeTitle(event.target.value)} placeholder="一台闲置 VPS 的 30 天使用权" minLength={2} maxLength={100} required /></label><label className="field">赠品类型<select value={stakeType} onChange={event => setStakeType(event.target.value as CreateGoalInput['stakeType'])}>{Object.entries(stakeNames).map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></label></div><label className="field">资源详情与交付方式<textarea value={stakeDetail} onChange={event => setStakeDetail(event.target.value)} placeholder="说明数量、有效期、转让条件、交付方式；实物请写清运费由谁承担。" minLength={2} maxLength={2000} rows={2} required /></label><p className="field-note"><Heart size={13} />请只填写本人有权赠送、能够转让的资源。平台记录承诺，交付由双方自愿完成。</p></div>}</div>
-    <label className="consent"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} required /><span>我理解：验收标准和截止日期在创建后固定；到期有 24 小时补报窗口，仅补报截止前的完成情况。未申报按未完成结算；设置的赠品会开启 48 小时免费报名，截止后由平台随机抽取。私人目标的任务和验收内容保持私密，赠品说明会在抽奖中公开。</span></label>
-    <div className="modal-footer"><span><ShieldCheck size={14} />如实记录，自愿履约</span><SubmitButton busy={busy}>和自己约定好了</SubmitButton></div>
+  return <Modal title="立下一个小小的约定" subtitle="不用一下子变得很厉害，先给想做的事一个开始。" onClose={onClose} wide><form onSubmit={submit} className="form-stack contract-form">
+    <div className="contract-steps" aria-label="创建契约的两个部分">
+      <div className="contract-step"><span>01</span><div><strong>写下目标</strong><small>把想做的事说清楚</small></div></div>
+      <span className="contract-step-line" aria-hidden="true" />
+      <div className="contract-step"><span>02</span><div><strong>约定规则</strong><small>给未来的自己一个边界</small></div></div>
+    </div>
+
+    <section className="contract-section" aria-labelledby="contract-goal-heading">
+      <div className="contract-section-heading"><span className="contract-section-icon lilac"><Target size={17} /></span><div><h3 id="contract-goal-heading">写下这次想完成的事</h3><p>越具体，下一步越容易开始。</p></div></div>
+      <label className="field">我想完成什么<input value={title} onChange={event => setTitle(event.target.value)} placeholder="比如：两周内，让个人博客真正上线" minLength={2} maxLength={100} required autoFocus /></label>
+      <label className="field">做到什么，才算完成？<textarea value={description} onChange={event => setDescription(event.target.value)} placeholder="写下具体的验收标准，比如：完成首页、文章列表，并发布至少一篇文章。" minLength={2} maxLength={2000} rows={3} required /><small>这是创建后的验收标准，之后会固定下来。</small></label>
+      <div className="form-columns"><label className="field">约定截止日期<input type="date" value={deadline} min={today} max={addDays(today, 366)} onChange={event => setDeadline(event.target.value)} required /><small>截止于北京时间当天 23:59，之后保留补报窗口。</small></label><div className="field">谁可以看见<label className="choice-box"><input type="checkbox" checked={isPublic} onChange={event => setPublic(event.target.checked)} /><Globe2 size={17} /><span>公开给佬友见证<small>关闭后，目标和任务只对自己可见。</small></span></label></div></div>
+      <p className="contract-fixed-note"><LockKeyhole size={14} />验收标准和截止日期创建后固定，请在提交前确认清楚。</p>
+    </section>
+
+    <section className="contract-section contract-rules-section" aria-labelledby="contract-rules-heading">
+      <div className="contract-section-heading"><span className="contract-section-icon peach"><ShieldCheck size={17} /></span><div><h3 id="contract-rules-heading">约定规则</h3><p>规则提前说清楚，执行时就少一点犹豫。</p></div></div>
+      <div className="contract-rule-grid">
+        <div className="contract-rule"><span>24h</span><p><strong>补报窗口</strong>截止后保留 24 小时，只能补报截止前已完成的情况。</p></div>
+        <div className="contract-rule"><span>诚</span><p><strong>如实申报</strong>窗口结束仍未申报，会按未完成结算。</p></div>
+        <div className="contract-rule"><span><Gift size={15} /></span><p><strong>赠品活动</strong>设置赠品后，未完成会开启 48 小时免费抽奖。</p></div>
+        <div className="contract-rule"><span><Globe2 size={15} /></span><p><strong>公开边界</strong>私人目标保持私密；赠品说明会在抽奖中公开。</p></div>
+      </div>
+      <div className={`stake-form ${hasStake ? 'is-active' : ''}`}><label className="stake-switch"><span className="soft-icon peach"><Gift size={20} /></span><span><strong>给这个约定，加一点分量</strong><small>选填。未完成时，自愿赠送一份心意。</small></span><input className="switch-input" type="checkbox" checked={hasStake} onChange={event => setHasStake(event.target.checked)} aria-label="设置自愿赠品" /></label>{hasStake && <div className="stake-fields"><div className="form-columns"><label className="field">我愿意送出<input value={stakeTitle} onChange={event => setStakeTitle(event.target.value)} placeholder="一台闲置 VPS 的 30 天使用权" minLength={2} maxLength={100} required /></label><label className="field">赠品类型<select value={stakeType} onChange={event => setStakeType(event.target.value as CreateGoalInput['stakeType'])}>{Object.entries(stakeNames).map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></label></div><label className="field">资源详情与交付方式<textarea value={stakeDetail} onChange={event => setStakeDetail(event.target.value)} placeholder="说明数量、有效期、转让条件、交付方式；实物请写清运费由谁承担。" minLength={2} maxLength={2000} rows={2} required /></label><p className="field-note"><Heart size={13} />请只填写本人有权赠送、能够转让的资源。平台记录承诺，交付由双方自愿完成。</p></div>}</div>
+    </section>
+
+    <label className="consent contract-consent"><input type="checkbox" checked={accepted} onChange={event => setAccepted(event.target.checked)} required /><span>我已读懂以上规则，并会按固定的验收标准如实申报。未申报按未完成结算；设置赠品时会开启 48 小时免费报名，私人目标保持私密，赠品说明会在抽奖中公开。</span></label>
+    <div className="modal-footer contract-footer"><span><ShieldCheck size={14} />如实记录，自愿履约</span><SubmitButton busy={busy}>创建契约</SubmitButton></div>
   </form></Modal>;
 }
 
