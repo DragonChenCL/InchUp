@@ -675,6 +675,72 @@ input[type='checkbox']:not(.switch-input) { width: 14px; height: 14px; accent-co
   .floating-mascot { transform: scale(.85); transform-origin: 50% 100%; }.toast { left: 50%; top: 15px; max-width: calc(100vw - 30px); padding: 11px 12px; }.toast p { font-size: 10px; }.focus-overlay { padding: 80px 24px 30px; }.focus-overlay::before { width: 420px; height: 420px; top: 150px; }.focus-overlay > h1 { font-size: 22px; }.focus-overlay > p { font-size: 10px; text-align: center; line-height: 1.9; }.focus-eyebrow { font-size: 9px; }.focus-clock { width: 250px; height: 250px; margin-top: 35px; }.focus-clock span { font-size: 58px; }.focus-clock small { font-size: 9px; }.focus-mascot { position: relative; left: auto; bottom: auto; margin-top: 38px; }.focus-mascot .mascot-sprite { width: 95px !important; height: 126.666px !important; }.focus-mascot > span { font-size: 9px; margin-top: 16px; }.focus-controls .button { font-size: 10px; padding-left: 12px; padding-right: 12px; }
 }
 
+/* 寸寸动作层：图集负责姿态，CSS 负责呼吸、脚步和转身，避免低帧图集像幻灯片一样跳变。 */
+.mascot-sprite {
+  background: none;
+  isolation: isolate;
+  overflow: visible;
+  will-change: transform;
+}
+.mascot-sprite-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background-image: url('/images/cuncun-sprites.png');
+  background-repeat: no-repeat;
+  background-size: 400% 200%;
+  background-color: transparent;
+  pointer-events: none;
+  transition: none;
+  will-change: opacity;
+}
+.mascot-sprite-previous { opacity: 0; }
+.mascot-sprite-current { opacity: 1; }
+.mascot-sprite.is-transitioning .mascot-sprite-previous { opacity: 1; }
+.mascot-sprite.is-transitioning .mascot-sprite-current { opacity: 0; }
+.mascot-sprite.is-transitioning .mascot-sprite-current { animation: sprite-crossfade-in var(--sprite-fade-duration, 120ms) ease-out forwards; }
+.mascot-sprite.is-transitioning .mascot-sprite-previous { animation: sprite-crossfade-out var(--sprite-fade-duration, 120ms) ease-out forwards; }
+
+.floating-mascot {
+  will-change: left, top;
+  transition: left var(--move-duration, 4.5s) cubic-bezier(.37, .01, .2, 1), top var(--move-duration, 4.5s) cubic-bezier(.37, .01, .2, 1);
+}
+.floating-mascot .mascot-sprite {
+  transform-origin: 50% 92%;
+  backface-visibility: hidden;
+}
+.floating-mascot .sprite-idle { animation: mascot-breathe 4.8s ease-in-out infinite; }
+.floating-mascot .sprite-walk { animation: mascot-step .76s cubic-bezier(.37, .01, .2, 1) infinite; }
+.floating-mascot .sprite-celebrate { animation: mascot-celebrate .96s cubic-bezier(.32, .72, .36, 1) infinite; }
+.floating-mascot.is-dragging .mascot-sprite,
+.floating-mascot:hover .mascot-sprite { animation-play-state: paused; }
+.floating-mascot.is-dragging .pet-ground { transform: scaleX(1.06); opacity: .8; }
+.facing-left .mascot-touch { transform: scaleX(-1); }
+.is-turning .mascot-touch { will-change: transform; }
+.is-turning.turn-to-left .mascot-touch { animation: turn-to-left .32s cubic-bezier(.7, 0, .25, 1) both; }
+.is-turning.turn-to-right .mascot-touch { animation: turn-to-right .32s cubic-bezier(.7, 0, .25, 1) both; }
+.is-walking .pet-ground { animation: ground-step .76s cubic-bezier(.37, .01, .2, 1) infinite; }
+.pet-ground { transition: transform .25s ease, opacity .25s ease; }
+
+@keyframes sprite-crossfade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sprite-crossfade-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes mascot-breathe { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(0, -2px, 0) scale(1.008, .997); } }
+@keyframes mascot-step { 0%, 12% { transform: translate3d(0, 0, 0) rotate(-.15deg); } 32% { transform: translate3d(0, -1px, 0) rotate(.35deg); } 50% { transform: translate3d(0, -2.4px, 0) rotate(0); } 68% { transform: translate3d(0, -.5px, 0) rotate(-.3deg); } 100% { transform: translate3d(0, 0, 0) rotate(-.15deg); } }
+@keyframes mascot-celebrate { 0%, 100% { transform: translate3d(0, 0, 0) rotate(-1deg) scale(1); } 45% { transform: translate3d(0, -5px, 0) rotate(1.2deg) scale(1.01); } }
+@keyframes ground-step { 0%, 100% { transform: scaleX(.9); opacity: .55; } 50% { transform: scaleX(1.02); opacity: .7; } }
+@keyframes turn-to-left { 0% { transform: scaleX(1); } 42% { transform: scaleX(.08); } 58% { transform: scaleX(.08); } 100% { transform: scaleX(-1); } }
+@keyframes turn-to-right { 0% { transform: scaleX(-1); } 42% { transform: scaleX(-.08); } 58% { transform: scaleX(-.08); } 100% { transform: scaleX(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot-sprite-frame { transition: none; }
+  .floating-mascot { transition: none; }
+  .floating-mascot .mascot-sprite,
+  .mascot-sprite.is-transitioning .mascot-sprite-current,
+  .mascot-sprite.is-transitioning .mascot-sprite-previous,
+  .is-walking .pet-ground,
+  .is-turning .mascot-touch { animation: none !important; }
+}
+
 @media (max-width: 420px) {
   .main-content { padding-left: 15px; padding-right: 15px; }.topbar { padding-left: 15px; padding-right: 15px; }.date-line { font-size: 7px; }.date-line .date-divider { margin: 0 5px; }.page-heading h1 { font-size: 21px; }.page-heading p { font-size: 8px; }.page-heading > .button { font-size: 8px; padding-left: 8px; padding-right: 8px; }.eyebrow { font-size: 7px; }.welcome-hero { min-height: 265px; grid-template-columns: 1.15fr 1fr; }.hero-copy { padding-left: 18px; padding-top: 24px; }.hero-copy h2 { font-size: 24px; }.hero-copy > p { font-size: 7px; }.hero-label { font-size: 6px; }.hero-character .mascot-sprite { width: 152px !important; height: 202.666px !important; }.hero-character { bottom: 32px; left: 47%; }.hero-speech { right: 7px; top: 40px; font-size: 6px; }.hero-name { bottom: 29px; left: 46%; font-size: 7px; padding: 5px 8px; }.hero-buttons .button { padding: 8px 10px; font-size: 8px; }.hero-buttons .button svg { width: 11px; height: 11px; }.scene-plant { right: -7px; }.stats-row { gap: 7px; }.stat-item { padding: 10px 9px; }.stat-top { font-size: 7px; }.stat-icon { width: 18px; height: 18px; }.stat-icon svg { width: 12px; height: 12px; }.stat-number { font-size: 23px; }.task-panel { padding: 16px; }.task-row { gap: 8px; }.task-text > strong { font-size: 10px; }.task-category { max-width: 157px; font-size: 6px; }.task-duration { min-width: 42px; font-size: 7px; }.task-duration small { font-size: 6px; }.task-duration svg { width: 10px; }.task-start { width: 22px; height: 22px; }.task-done-label { font-size: 6px; min-width: 23px; }.task-done-label span { font-size: 8px; }.dashboard-aside { grid-template-columns: 1fr; }.promise-panel, .ai-note { padding: 20px; }.promise-panel .panel-heading h2 { font-size: 12px; }.featured-goal h3 { font-size: 15px; }.featured-goal > p { font-size: 9px; }.pledge-title { font-size: 9px; }.pledge-ticket > strong { font-size: 12px; }.pledge-ticket > p { font-size: 9px; }.ai-note h3 { font-size: 14px; }.ai-note > p { font-size: 10px; }.tiny-label { font-size: 8px; }.ai-note > button { font-size: 11px; }.ai-note > p > br { display: none; }.goal-card-actions { gap: 12px; }.goal-card-actions .text-button { font-size: 8px; }.goal-card { padding: 20px; }.goal-title-button h2 { font-size: 16px; }.giveaway-principles > span { font-size: 8px; }.modal { padding: 20px; }.modal-heading h2 { font-size: 17px; }.modal-footer { gap: 8px; }.modal-footer > span { font-size: 7px; }.form-columns { grid-template-columns: 1fr; }.choice-box > svg { display: block; }.choice-box > span { font-size: 10px; }.choice-box small { font-size: 9px; }.choice-box { padding: 12px; }.model-presets { gap: 5px; }.model-presets button { font-size: 8px; padding: 5px 6px; }
 }
@@ -703,3 +769,12 @@ input[type='checkbox']:not(.switch-input) { width: 14px; height: 14px; accent-co
   .field > input, .field > textarea, .field > select, .field > div > input { font-size: 16px; }
   .field > small, .consent { font-size: 10px; }
 }
+
+/* 模型连接测试沿用设置页的轻量反馈样式。 */
+.model-fields { display: contents; }
+.model-test-result { padding: 17px 19px; background: var(--sage-light, #eef3ee); border: 1px solid #dce6dc; border-radius: 13px; overflow-wrap: anywhere; }
+.model-test-result strong { display: flex; align-items: center; gap: 7px; color: #52745c; font-size: 13px; }
+.model-test-result p { margin: 10px 0; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+.model-test-result small { display: block; margin-top: 6px; color: #748073; font-size: 11px; line-height: 1.6; }
+
+.plan-summary small { display: block; margin-top: 7px; font-size: 11px; line-height: 1.6; color: var(--muted); }

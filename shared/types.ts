@@ -99,4 +99,12 @@ export interface ModelSettings {
   model: string;
   apiKey: string;
   dailyMinutes: number;
+  reasoningEffort: 'auto' | 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+}
+
+export interface ModelTestResult {
+  content: string;
+  model: string;
+  durationMs: number;
+  usage: { promptTokens?: number; completionTokens?: number; totalTokens?: number; reasoningTokens?: number };
 }

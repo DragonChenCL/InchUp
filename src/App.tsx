@@ -17,7 +17,13 @@ const navigation = [
 ];
 type DialogState = { type: 'create' } | { type: 'task' | 'plan'; goalId?: string } | { type: 'settle' | 'detail'; goalId: string } | { type: 'rules' | 'login' } | null;
 type Toast = { message: string; error?: boolean } | null;
-const defaultModel: ModelSettings = { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat', apiKey: '', dailyMinutes: 60 };
+const defaultModel: ModelSettings = { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat', apiKey: '', dailyMinutes: 60, reasoningEffort: 'auto' };
+const reasoningEfforts = new Set<ModelSettings['reasoningEffort']>(['auto', 'none', 'minimal', 'low', 'medium', 'high', 'xhigh']);
+
+function loadModelSettings(): ModelSettings {
+  const saved = readSaved('inchup-model', defaultModel);
+  return { ...defaultModel, ...saved, apiKey: '', reasoningEffort: reasoningEfforts.has(saved.reasoningEffort) ? saved.reasoningEffort : 'auto' };
+}
 
 export default function App() {
   const [state, setState] = useState<AppState | null>(null);
@@ -33,7 +39,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications, setNotifications] = useState(false);
   const [connectionLost, setConnectionLost] = useState(false);
-  const [model, setModel] = useState<ModelSettings>(() => ({ ...readSaved('inchup-model', defaultModel), apiKey: '' }));
+  const [model, setModel] = useState<ModelSettings>(loadModelSettings);
   const [preferences, setPreferences] = useState<MascotPreferences>(() => readSaved('inchup-mascot', { enabled: true, roaming: true, quiet: false }));
   const searchRef = useRef<HTMLInputElement>(null);
 
